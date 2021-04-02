@@ -32,7 +32,7 @@ def write_in_file(FileName, file_path, cwd):
 
 
 def search_in_list(dir_path: str, name: str, file_list: list) -> Any:
-    global q
+    # global q
     found_match =list()
     count = 0
     for fileName in file_list:
@@ -48,15 +48,22 @@ def search_in_list(dir_path: str, name: str, file_list: list) -> Any:
 
 
 def driver(params, manager_dict):
+    # global manager_dict
+    # manager_dict = {}
     search_index = 0
+    manager_dict['locs'] = []
     for search_index, param in enumerate(params):
         param: Tuple[str, str, list, set]
         res = search_in_list(*param)
         if res:
+            # print("res=", res)
             if 'locs' in manager_dict:
-                manager_dict['locs'].extend(list(res))
+                # print("locs=", manager_dict['locs'])
+                files = manager_dict['locs']
+                files.extend(res)
+                manager_dict['locs'] = files
             else:
-                manager_dict['locs'] = list(res)
+                manager_dict['locs'] = [res]
     manager_dict['search_count'] = search_index
     # return manager_dict
 
@@ -78,15 +85,20 @@ def start_process(file_name, destination_path):
     start_time = timeit.default_timer()
     print("Fetching files...\n")
     parameters = main(file_name, destination_path)
-    print("starting processing...\n")
-    global manager_dict
+    print("starting Search...\n")
+    
     manager_dict = multiprocessing.Manager().dict()
-    p = multiprocessing.Process(target=driver, args=(parameters, manager_dict))
+    p = multiprocessing.Process(target=driver, args=(parameters,manager_dict))
     p.start()
     p.join()
+    
+    # p.close()
     end_time = timeit.default_timer()
-
-    all_found = manager_dict['locs']
+    print("Manager dict:", manager_dict)
+    if 'locs' not in dict(manager_dict):
+        print("Setting locs to []")
+        manager_dict['locs'] = []
+    all_found = dict(manager_dict)['locs']
     print(f"Found {len(all_found)} file{'s' if len(all_found) else ''} for current search tag: {file_name}")
 
     print(f"Time taken: {(end_time - start_time):.02f} seconds")

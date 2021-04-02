@@ -1,3 +1,4 @@
+# from colorama import Fore, Back, Style
 from scripts import dir_walk_2
 import os
 import sys
@@ -5,6 +6,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidget, QLabel, QFil
 from PyQt5.QtCore import QUrl
 from PyQt5 import QtCore
 from scripts.ui import file_finder
+import multiprocessing
+from multiprocessing import freeze_support
 
 
 def OpenFile(parent, title, preferred_dir=None):
@@ -32,6 +35,7 @@ class SearchThread(QtCore.QThread):
 
     def run(self) -> None:
         manager_dict = dir_walk_2.start_process(self.file_name, self.destination)  # returns a list
+        # print(Fore.RED + "Returning value"+ Style.RESET_ALL)
         self.values.emit(manager_dict)
 
 
@@ -71,9 +75,11 @@ class Application(QMainWindow):
             self.ListWidget.setHidden(True)
 
     def show_failed(self):
+        self.failed_label = QLabel(self)
+        self.ui.verticalLayout.addWidget(self.failed_label)
         self.failed_label.setStyleSheet('color : red')
         self.failed_label.setText('Search Unsuccessful!')
-        self.ui.verticalLayout.addWidget(self.failed_label)
+
         self.index = 1
 
     def putIntoList(self, list_view):
@@ -89,6 +95,7 @@ class Application(QMainWindow):
         :return: None
         """
         # get the filename and destination to be searched
+        self.clear_n_hide()
         file_name = self.ui.lineEdit.text()
         destination = self.ui.lineEdit_2.text()
         print(f'File:{file_name}\nDestination:{destination}')
@@ -128,6 +135,7 @@ class Application(QMainWindow):
 
 
 if __name__ == '__main__':
+    freeze_support()
     app = QApplication(sys.argv)
     class_instance = Application()
     class_instance.show()
